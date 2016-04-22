@@ -44,31 +44,39 @@ class Regra {
     }
 
     public function gerar() {
-        $this->mostrarTabela();
+        if ($this->isPassoAPasso) {
+            $this->mostrarTabela();
+        }
 
         $linhasArquivo = file($this->arquivo);
+        $ultimoEnderecoArquivo = end($linhasArquivo);
 
-        foreach ($linhasArquivo as $linha) {
-            if ($this->_existeValorNaMemoria($linha)) {
+        foreach ($linhasArquivo as $endereco) {
+            $endereco = trim($endereco); //remove espaçamentos
+            if ($this->_existeEnderecoNaMemoria($endereco)) {
                 $this->setNumeroHits();
             } else {
                 $this->setNumeroMiss();
             }
 
-            $this->setEnderecoNaMemoria(trim($linha));
-            $this->mostrarTabela();
+            $this->setEnderecoNaMemoria($endereco);
+
+            $isUltimoEndereco = $ultimoEnderecoArquivo == $endereco; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
+            if ($this->isPassoAPasso || $isUltimoEndereco) {
+                $this->mostrarTabela($endereco);
+            }
         }
     }
 
-    private function _existeValorNaMemoria($linha) {
+    private function _existeEnderecoNaMemoria($endereco) {
         $memoriaCache = $this->getTabelaCache();
-        $idx = self::getIdxEndereco($linha);
+        $idx = self::getIdxEndereco($endereco);
 
         if (!isset($memoriaCache[$idx])) {
             return false;
         }
 
-        $tag = self::getTagEndereco($linha);
+        $tag = self::getTagEndereco($endereco);
         if ($memoriaCache[$idx]['tag'] != $tag) {
             return false;
         }
@@ -93,11 +101,11 @@ class Regra {
     }
 
     public static function getIdxEndereco($endereco) {
-        return substr(trim($endereco), -2, 1);
+        return substr($endereco, -2, 1);
     }
 
     public static function getTagEndereco($endereco) {
-        return substr(trim($endereco), 0, 6);
+        return substr($endereco, 0, 6);
     }
 
     private function _isPassoAPasso($arrayParametros) {
@@ -132,7 +140,11 @@ class Regra {
         return $arrayTabelaCache;
     }
 
-    public function mostrarTabela() {
+    public function mostrarTabela($enderecoQueEEstaSendoLendo = '') {
+        if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
+            echo "Leitura do endereço 0x" . $enderecoQueEEstaSendoLendo . "\n\n";
+        }
+
         $mask = "|%3s|%1s|%7s|%17s|%17s|%17s|%17s|\n";
         printf($mask, 'Idx', 'V', 'Tag', 'data', 'data', 'data', 'data');
         foreach ($this->getTabelaCache() as $linha => $valores) {
@@ -140,8 +152,10 @@ class Regra {
         }
 
         echo "\n HITS: " . $this->getNumeroHits() . "     MISSES: " . $this->getNumeroMiss() . "\n";
-        echo "\n Pressione enter para continuar... \n";
-        fgetc(STDIN);
+        if ($this->isPassoAPasso) {
+            echo "\n Pressione enter para continuar... \n";
+            fgetc(STDIN);
+        }
     }
 
 }
