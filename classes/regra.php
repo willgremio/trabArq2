@@ -14,9 +14,25 @@ class Regra {
     private $numeroMiss = 0;
 
     public function __construct($arrayParametros) {
-        $this->isPassoAPasso = $this->_isPassoAPasso($arrayParametros);
-        $this->arquivo = $this->_getArquivoEntrada($arrayParametros);
-        $this->tabelaCache = $this->_getTabelaCacheInicial();
+        $this->setIsPassoAPasso($this->_isPassoAPasso($arrayParametros));
+        $this->setArquivo($this->_getArquivoEntrada($arrayParametros));
+        $this->setTabelaCache($this->_getTabelaCacheInicial());
+    }
+    
+    public function setArquivo($arquivo) {
+        $this->arquivo = $arquivo;
+    }
+    
+    public function getArquivo() {
+        return $this->arquivo;
+    }
+    
+    public function setIsPassoAPasso($isPassoAPasso) {
+        $this->isPassoAPasso = $isPassoAPasso;
+    }
+    
+    public function getIsPassoAPasso() {
+        return $this->isPassoAPasso;
     }
 
     public function setNumeroHits() {
@@ -44,11 +60,11 @@ class Regra {
     }
 
     public function gerar() {
-        if ($this->isPassoAPasso) {
+        if ($this->getIsPassoAPasso()) {
             $this->mostrarTabela();
         }
 
-        $linhasArquivo = file($this->arquivo);
+        $linhasArquivo = file($this->getArquivo());
         $ultimoEnderecoArquivo = end($linhasArquivo);
 
         foreach ($linhasArquivo as $endereco) {
@@ -62,7 +78,7 @@ class Regra {
             $this->setEnderecoNaMemoria($endereco);
 
             $isUltimoEndereco = $ultimoEnderecoArquivo == $endereco; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
-            if ($this->isPassoAPasso || $isUltimoEndereco) {
+            if ($this->getIsPassoAPasso() || $isUltimoEndereco) {
                 $this->mostrarTabela($endereco);
             }
         }
@@ -117,7 +133,7 @@ class Regra {
     }
 
     private function _getArquivoEntrada($arrayParametros) {
-        if ($this->isPassoAPasso) {
+        if ($this->getIsPassoAPasso()) {
             return $arrayParametros[2];
         }
 
@@ -141,7 +157,7 @@ class Regra {
     }
 
     public function mostrarTabela($enderecoQueEEstaSendoLendo = '') {
-        if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
+        if ($this->getIsPassoAPasso() && !empty($enderecoQueEEstaSendoLendo)) {
             echo "Leitura do endereço 0x" . $enderecoQueEEstaSendoLendo . "\n\n";
         }
 
@@ -152,7 +168,7 @@ class Regra {
         }
 
         echo "\n HITS: " . $this->getNumeroHits() . "     MISSES: " . $this->getNumeroMiss() . "\n";
-        if ($this->isPassoAPasso) {
+        if ($this->getIsPassoAPasso()) {
             echo "\n Pressione enter para continuar... \n";
             fgetc(STDIN);
         }
