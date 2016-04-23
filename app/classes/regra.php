@@ -18,19 +18,19 @@ class Regra {
         $this->setArquivo($this->_getArquivoEntrada($arrayParametros));
         $this->setTabelaCache($this->_getTabelaCacheInicial());
     }
-    
+
     public function setArquivo($arquivo) {
         $this->arquivo = $arquivo;
     }
-    
+
     public function getArquivo() {
         return $this->arquivo;
     }
-    
+
     public function setIsPassoAPasso($isPassoAPasso) {
         $this->isPassoAPasso = $isPassoAPasso;
     }
-    
+
     public function getIsPassoAPasso() {
         return $this->isPassoAPasso;
     }
@@ -134,16 +134,22 @@ class Regra {
 
     private function _getArquivoEntrada($arrayParametros) {
         if ($this->getIsPassoAPasso()) {
-            return $arrayParametros[2];
+            return $arrayParametros[1];
         }
 
-        return $arrayParametros[1];
+        return $arrayParametros[0];
     }
 
     private function _getTabelaCacheInicial() {
         $arrayTabelaCache = array();
+        $letrasHexadecimais = [10 => 'A', 11 => 'B', 12 => 'C', 13 => 'D', 14 => 'E', 15 => 'F'];
         for ($i = 0; $i < 16; $i++) {
-            $arrayTabelaCache[$i] = [
+            $idx = $i;
+            if ($i > 9) {
+                $idx = $letrasHexadecimais[$i];
+            }
+
+            $arrayTabelaCache[$idx] = [
                 'v' => 0,
                 'tag' => '',
                 'data1' => '',

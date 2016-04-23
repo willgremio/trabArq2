@@ -1,6 +1,6 @@
 <?php
 
-require_once('classes/regra.php');
+require_once('app/classes/regra.php');
 /**
  * Description of Gerar
  *
@@ -21,11 +21,11 @@ class Gerar {
     private function _validaParametros($arrayParametros) {
         $numeroParametros = count($arrayParametros);
         if ($numeroParametros == 0) {  //tem q ter pelo menos o parametro do .txt
-            throw new Exception('É necessário o arquivo .txt!');
+            throw new Exception("É necessário o arquivo .txt!\n");
         }
         
         if ($numeroParametros > 2) {
-            throw new Exception('Só é valido passar 2 parametros apenas!');
+            throw new Exception("Só é valido passar 2 parametros apenas!\n");
         }
     }
 
