@@ -1,6 +1,6 @@
 # Arquitetura de Computadores II – Trabalho I
-          Prof. Eduardo Wächter
 
-# Simulador de Memória Cache
+## Simulador de Memória Cache
+Prof. Eduardo Wächter
 
 Integrantes: Willian Serafini e Gabriel Calderaro
