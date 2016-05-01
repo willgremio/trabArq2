@@ -1,5 +1,8 @@
 <?php
 
+require_once('app/config/parametros.php');
+require_once('app/classes/conversao.php');
+
 /**
  * Description of regras
  *
@@ -47,7 +50,7 @@ class Regra {
         $this->numeroMiss ++;
     }
 
-    public function getNumeroMiss() {
+    public function getNumeroMisses() {
         return $this->numeroMiss;
     }
 
@@ -104,6 +107,7 @@ class Regra {
         $memoriaCache = $this->getTabelaCache();
         $idx = self::getIdxEndereco($endereco);
         $tag = self::getTagEndereco($endereco);
+        $this->removeUltimoHexadecimalEndereco($endereco);
         $memoriaCache[$idx] = [
             'v' => 1,
             'tag' => $tag,
@@ -117,11 +121,30 @@ class Regra {
     }
 
     public static function getIdxEndereco($endereco) {
-        return substr($endereco, -2, 1);
+        $tamanhoIndex = self::getTamanhoIndex();
+        $tamanhoTag = self::getTamanhoTag();
+        return substr($endereco, $tamanhoTag, $tamanhoIndex);
     }
 
     public static function getTagEndereco($endereco) {
-        return substr($endereco, 0, 6);
+        $tamanhoTag = self::getTamanhoTag();
+        return substr($endereco, 0, $tamanhoTag);
+    }
+    
+    public static function getTamanhoTag() {
+        return NUMERO_BITS_TAG / 4; //tem que ve se isso ta certo
+    }
+    
+    public static function getTamanhoIndex() {
+        return NUMERO_BITS_INDEX / 4; //tem que ve se isso ta certo
+    }
+    
+    private function _getQuantidadeLinhas() {        
+        return 16;
+    }
+    
+    private function removeUltimoHexadecimalEndereco(&$endereco) {
+        $endereco = substr_replace($endereco, "X", -1);
     }
 
     private function _isPassoAPasso($arrayParametros) {
@@ -142,13 +165,9 @@ class Regra {
 
     private function _getTabelaCacheInicial() {
         $arrayTabelaCache = array();
-        $letrasHexadecimais = [10 => 'A', 11 => 'B', 12 => 'C', 13 => 'D', 14 => 'E', 15 => 'F'];
-        for ($i = 0; $i < 16; $i++) {
-            $idx = $i;
-            if ($i > 9) {
-                $idx = $letrasHexadecimais[$i];
-            }
-
+        $quantidadeDeLinhas = $this->_getQuantidadeLinhas();
+        for ($i = 0; $i < $quantidadeDeLinhas; $i++) {
+            $idx = Conversao::getDecimalToHexadecimal($i);
             $arrayTabelaCache[$idx] = [
                 'v' => 0,
                 'tag' => '',
@@ -173,7 +192,7 @@ class Regra {
             printf($mask, $linha, $valores['v'], $valores['tag'], $valores['data1'], $valores['data2'], $valores['data3'], $valores['data4']);
         }
 
-        echo "\n HITS: " . $this->getNumeroHits() . "     MISSES: " . $this->getNumeroMiss() . "\n";
+        echo "\n HITS: " . $this->getNumeroHits() . "     MISSES: " . $this->getNumeroMisses() . "\n";
         if ($this->getIsPassoAPasso()) {
             echo "\n Pressione enter para continuar... \n";
             fgetc(STDIN);
