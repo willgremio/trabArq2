@@ -34,10 +34,6 @@ class Regra {
         $this->isPassoAPasso = $isPassoAPasso;
     }
 
-    public function getIsPassoAPasso() {
-        return $this->isPassoAPasso;
-    }
-
     public function setNumeroHits() {
         $this->numeroHits ++;
     }
@@ -63,7 +59,7 @@ class Regra {
     }
 
     public function gerar() {
-        if ($this->getIsPassoAPasso()) {
+        if ($this->isPassoAPasso) {
             $this->mostrarTabela();
         }
 
@@ -81,7 +77,7 @@ class Regra {
             $this->setEnderecoNaMemoria($endereco);
 
             $isUltimoEndereco = $ultimoEnderecoArquivo == $endereco; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
-            if ($this->getIsPassoAPasso() || $isUltimoEndereco) {
+            if ($this->isPassoAPasso || $isUltimoEndereco) {
                 $this->mostrarTabela($endereco);
             }
         }
@@ -110,12 +106,12 @@ class Regra {
         $this->removeUltimoHexadecimalEndereco($endereco);
         $memoriaCache[$idx] = [
             'v' => 1,
-            'tag' => $tag,
-            'data1' => 'mem(' . $endereco . ')',
-            'data2' => 'mem(' . $endereco . ')',
-            'data3' => 'mem(' . $endereco . ')',
-            'data4' => 'mem(' . $endereco . ')'
+            'tag' => $tag
         ];
+
+        for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
+            $memoriaCache[$idx]['data' . $i] = 'mem(' . $endereco . ')';
+        }
 
         $this->setTabelaCache($memoriaCache);
     }
@@ -130,19 +126,23 @@ class Regra {
         $tamanhoTag = self::getTamanhoTag();
         return substr($endereco, 0, $tamanhoTag);
     }
-    
+
     public static function getTamanhoTag() {
         return NUMERO_BITS_TAG / 4; //tem que ve se isso ta certo
     }
-    
+
     public static function getTamanhoIndex() {
         return NUMERO_BITS_INDEX / 4; //tem que ve se isso ta certo
     }
-    
-    private function _getQuantidadeLinhas() {        
-        return 16;
+
+    public static function getQuantidadeLinhas() {
+        return pow(2, NUMERO_BITS_INDEX); //Potência. base 2 e expoente NUMERO_BITS_INDEX
     }
-    
+
+    public static function getQuantidadeBlocosPalavra() {
+        return pow(2, NUMERO_BITS_OFFSET); //Potência. base 2 e expoente NUMERO_BITS_OFFSET
+    }
+
     private function removeUltimoHexadecimalEndereco(&$endereco) {
         $endereco = substr_replace($endereco, "X", -1);
     }
@@ -156,7 +156,7 @@ class Regra {
     }
 
     private function _getArquivoEntrada($arrayParametros) {
-        if ($this->getIsPassoAPasso()) {
+        if ($this->isPassoAPasso) {
             return $arrayParametros[1];
         }
 
@@ -165,35 +165,44 @@ class Regra {
 
     private function _getTabelaCacheInicial() {
         $arrayTabelaCache = array();
-        $quantidadeDeLinhas = $this->_getQuantidadeLinhas();
-        for ($i = 0; $i < $quantidadeDeLinhas; $i++) {
+        for ($i = 0; $i < self::getQuantidadeLinhas(); $i++) {
             $idx = Conversao::getDecimalToHexadecimal($i);
             $arrayTabelaCache[$idx] = [
                 'v' => 0,
-                'tag' => '',
-                'data1' => '',
-                'data2' => '',
-                'data3' => '',
-                'data4' => '',
+                'tag' => ''
             ];
+            for ($i2 = 1; $i2 <= self::getQuantidadeBlocosPalavra(); $i2 ++) {
+                $arrayTabelaCache[$idx]['data' . $i2] = '';
+            }
         }
 
         return $arrayTabelaCache;
     }
 
     public function mostrarTabela($enderecoQueEEstaSendoLendo = '') {
-        if ($this->getIsPassoAPasso() && !empty($enderecoQueEEstaSendoLendo)) {
+        if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
             echo "Leitura do endereço 0x" . $enderecoQueEEstaSendoLendo . "\n\n";
         }
 
-        $mask = "|%3s|%1s|%7s|%17s|%17s|%17s|%17s|\n";
-        printf($mask, 'Idx', 'V', 'Tag', 'data', 'data', 'data', 'data');
+        $mask = "|%3s|%1s|%7s|";
+        printf($mask, 'Idx', 'V', 'Tag');
+        $maskBlocos = "%14s|";
+        for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
+            printf($maskBlocos, 'data');
+        }
+
+        echo "\n";
         foreach ($this->getTabelaCache() as $linha => $valores) {
-            printf($mask, $linha, $valores['v'], $valores['tag'], $valores['data1'], $valores['data2'], $valores['data3'], $valores['data4']);
+            printf($mask, $linha, $valores['v'], $valores['tag']);
+            for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
+                printf($maskBlocos, $valores['data' . $i]);
+            }
+            
+            echo "\n";
         }
 
         echo "\n HITS: " . $this->getNumeroHits() . "     MISSES: " . $this->getNumeroMisses() . "\n";
-        if ($this->getIsPassoAPasso()) {
+        if ($this->isPassoAPasso) {
             echo "\n Pressione enter para continuar... \n";
             fgetc(STDIN);
         }
