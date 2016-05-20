@@ -67,18 +67,18 @@ class Regra {
         $ultimoEnderecoArquivo = end($linhasArquivo);
 
         foreach ($linhasArquivo as $endereco) {
-            $endereco = trim($endereco); //remove espaçamentos
-            if ($this->_existeEnderecoNaMemoria($endereco)) {
+            $enderecoBinario = Conversao::getHexadecimalToBinario($endereco);
+            if ($this->_existeEnderecoNaMemoria($enderecoBinario)) {
                 $this->setNumeroHits();
             } else {
                 $this->setNumeroMiss();
             }
 
-            $this->setEnderecoNaMemoria($endereco);
+            $this->setEnderecoNaMemoria($enderecoBinario);
 
             $isUltimoEndereco = $ultimoEnderecoArquivo == $endereco; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
             if ($this->isPassoAPasso || $isUltimoEndereco) {
-                $this->mostrarTabela($endereco);
+                $this->mostrarTabela($enderecoBinario);
             }
         }
     }
@@ -87,12 +87,16 @@ class Regra {
         $memoriaCache = $this->getTabelaCache();
         $idx = self::getIdxEndereco($endereco);
 
-        if (!isset($memoriaCache[$idx])) {
+        if (!isset($memoriaCache[$idx])) { //ve se existe a linha
+            return false;
+        }
+        
+        if ($memoriaCache[$idx]['v'] == 0) { //verifica bit de validade
             return false;
         }
 
         $tag = self::getTagEndereco($endereco);
-        if ($memoriaCache[$idx]['tag'] != $tag) {
+        if ($memoriaCache[$idx]['tag'] != $tag) { //verifica se a tag que tem naquela linha é a mesma do endereço
             return false;
         }
 
@@ -103,7 +107,6 @@ class Regra {
         $memoriaCache = $this->getTabelaCache();
         $idx = self::getIdxEndereco($endereco);
         $tag = self::getTagEndereco($endereco);
-        $this->removeUltimoHexadecimalEndereco($endereco);
         $memoriaCache[$idx] = [
             'v' => 1,
             'tag' => $tag
@@ -117,22 +120,12 @@ class Regra {
     }
 
     public static function getIdxEndereco($endereco) {
-        $tamanhoIndex = self::getTamanhoIndex();
-        $tamanhoTag = self::getTamanhoTag();
-        return substr($endereco, $tamanhoTag, $tamanhoIndex);
+        $index = substr($endereco, NUMERO_BITS_TAG, NUMERO_BITS_INDEX);
+        return ltrim($index, "0"); //remove 0s a esquerda
     }
 
     public static function getTagEndereco($endereco) {
-        $tamanhoTag = self::getTamanhoTag();
-        return substr($endereco, 0, $tamanhoTag);
-    }
-
-    public static function getTamanhoTag() {
-        return NUMERO_BITS_TAG / 4; //tem que ve se isso ta certo
-    }
-
-    public static function getTamanhoIndex() {
-        return NUMERO_BITS_INDEX / 4; //tem que ve se isso ta certo
+        return substr($endereco, 0, NUMERO_BITS_TAG);
     }
 
     public static function getQuantidadeLinhas() {
@@ -141,10 +134,6 @@ class Regra {
 
     public static function getQuantidadeBlocosPalavra() {
         return pow(2, NUMERO_BITS_OFFSET); //Potência. base 2 e expoente NUMERO_BITS_OFFSET
-    }
-
-    private function removeUltimoHexadecimalEndereco(&$endereco) {
-        $endereco = substr_replace($endereco, "X", -1);
     }
 
     private function _isPassoAPasso($arrayParametros) {
@@ -166,7 +155,7 @@ class Regra {
     private function _getTabelaCacheInicial() {
         $arrayTabelaCache = array();
         for ($i = 0; $i < self::getQuantidadeLinhas(); $i++) {
-            $idx = Conversao::getDecimalToHexadecimal($i);
+            $idx = Conversao::getDecimalToBinario($i);
             $arrayTabelaCache[$idx] = [
                 'v' => 0,
                 'tag' => ''
@@ -184,9 +173,9 @@ class Regra {
             echo "Leitura do endereço 0x" . $enderecoQueEEstaSendoLendo . "\n\n";
         }
 
-        $mask = "|%3s|%1s|%7s|";
+        $mask = "|%" . NUMERO_BITS_INDEX . "s|%1s|%" . NUMERO_BITS_TAG . "s|"; // espacamento na tela
         printf($mask, 'Idx', 'V', 'Tag');
-        $maskBlocos = "%14s|";
+        $maskBlocos = "%37s|";
         for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
             printf($maskBlocos, 'data');
         }
