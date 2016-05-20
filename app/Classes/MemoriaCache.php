@@ -1,14 +1,14 @@
 <?php
 
-require_once('app/config/parametros.php');
-require_once('app/classes/conversao.php');
+require_once('app/Config/parametros.php');
+require_once('app/Classes/Conversao.php');
 
 /**
  * Description of regras
  *
  * @author Willian
  */
-class Regra {
+class MemoriaCache {
 
     private $arquivo;
     private $isPassoAPasso;

@@ -1,6 +1,6 @@
 <?php
 
-require_once('app/classes/regra.php');
+require_once('app/Classes/MemoriaCache.php');
 
 /**
  * Description of Gerar
@@ -13,8 +13,8 @@ class Gerar {
         try {
             $this->_removeParametrosDesnecessarios($arrayParametros);
             $this->_validaParametros($arrayParametros);
-            $objRegra = new Regra($arrayParametros);
-            $objRegra->gerar();
+            $objMemCache = new MemoriaCache($arrayParametros);
+            $objMemCache->gerar();
         } catch (Exception $ex) {
             echo $ex->getMessage();
         }
