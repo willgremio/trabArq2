@@ -66,19 +66,20 @@ class MemoriaCache {
         $linhasArquivo = file($this->getArquivo());
         $ultimoEnderecoArquivo = end($linhasArquivo);
 
-        foreach ($linhasArquivo as $endereco) {
-            $enderecoBinario = Conversao::getHexadecimalToBinario($endereco);
+        foreach ($linhasArquivo as $enderecoHexadecimal) {
+            $enderecoHexadecimal = trim($enderecoHexadecimal); // remove espaçamentos
+            $enderecoBinario = Conversao::getHexadecimalToBinario($enderecoHexadecimal);
             if ($this->_existeEnderecoNaMemoria($enderecoBinario)) {
                 $this->setNumeroHits();
             } else {
                 $this->setNumeroMiss();
             }
 
-            $this->setEnderecoNaMemoria($enderecoBinario);
+            $this->setEnderecoNaMemoria($enderecoBinario, $enderecoHexadecimal);
 
-            $isUltimoEndereco = $ultimoEnderecoArquivo == $endereco; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
+            $isUltimoEndereco = $ultimoEnderecoArquivo == $enderecoHexadecimal; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
             if ($this->isPassoAPasso || $isUltimoEndereco) {
-                $this->mostrarTabela($enderecoBinario);
+                $this->mostrarTabela($enderecoBinario, $enderecoHexadecimal);
             }
         }
     }
@@ -103,7 +104,7 @@ class MemoriaCache {
         return true;
     }
 
-    public function setEnderecoNaMemoria($endereco) {
+    public function setEnderecoNaMemoria($endereco, $enderecoHexadecimal) {
         $memoriaCache = $this->getTabelaCache();
         $idx = self::getIdxEndereco($endereco);
         $tag = self::getTagEndereco($endereco);
@@ -113,7 +114,7 @@ class MemoriaCache {
         ];
 
         for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
-            $memoriaCache[$idx]['data' . $i] = 'mem(' . $endereco . ')';
+            $memoriaCache[$idx]['data' . $i] = 'mem(' . $enderecoHexadecimal . ')';
         }
 
         $this->setTabelaCache($memoriaCache);
@@ -168,14 +169,15 @@ class MemoriaCache {
         return $arrayTabelaCache;
     }
 
-    public function mostrarTabela($enderecoQueEEstaSendoLendo = '') {
+    public function mostrarTabela($enderecoQueEEstaSendoLendo = '', $enderecoHexadecimal = '') {
         if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
-            echo "Leitura do endereço 0x" . $enderecoQueEEstaSendoLendo . "\n\n";
+            echo "Leitura do endereço em binario : 0x" . $enderecoQueEEstaSendoLendo . "\n";
+            echo "Leitura do endereço em hexadecimal : 0x" . $enderecoHexadecimal . "\n\n";
         }
 
-        $mask = "|%" . NUMERO_BITS_INDEX . "s|%1s|%" . NUMERO_BITS_TAG . "s|"; // espacamento na tela
+        $mask = "|%" . NUMERO_BITS_INDEX . "s|%1s|%" . NUMERO_BITS_TAG . "s|"; // ajusta o espacamento na tela
         printf($mask, 'Idx', 'V', 'Tag');
-        $maskBlocos = "%37s|";
+        $maskBlocos = "%13s|";
         for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
             printf($maskBlocos, 'data');
         }
