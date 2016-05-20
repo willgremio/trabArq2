@@ -113,6 +113,8 @@ class MemoriaCache {
             'tag' => $tag
         ];
 
+	$this->removeUltimoHexadecimalEndereco($enderecoHexadecimal);
+
         for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
             $memoriaCache[$idx]['data' . $i] = 'mem(' . $enderecoHexadecimal . ')';
         }
@@ -169,6 +171,10 @@ class MemoriaCache {
         return $arrayTabelaCache;
     }
 
+    private function removeUltimoHexadecimalEndereco(&$endereco) {
+       $endereco = substr_replace($endereco, "X", -1);
+   	}
+
     public function mostrarTabela($enderecoQueEEstaSendoLendo = '', $enderecoHexadecimal = '') {
         if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
             echo "Leitura do endereço em binario : 0x" . $enderecoQueEEstaSendoLendo . "\n";
@@ -197,6 +203,7 @@ class MemoriaCache {
             echo "\n Pressione enter para continuar... \n";
             fgetc(STDIN);
         }
-    }
+
+     }
 
 }
