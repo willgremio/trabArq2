@@ -64,9 +64,10 @@ class MemoriaCache {
         }
 
         $linhasArquivo = file($this->getArquivo());
-        $ultimoEnderecoArquivo = end($linhasArquivo);
+        end($linhasArquivo);
+        $lastkeyOfArray = key($linhasArquivo);
 
-        foreach ($linhasArquivo as $enderecoHexadecimal) {
+        foreach ($linhasArquivo as $key => $enderecoHexadecimal) {
             $enderecoHexadecimal = trim($enderecoHexadecimal); // remove espaçamentos
             $enderecoBinario = Conversao::getHexadecimalToBinario($enderecoHexadecimal);
             if ($this->_existeEnderecoNaMemoria($enderecoBinario)) {
@@ -77,8 +78,8 @@ class MemoriaCache {
 
             $this->setEnderecoNaMemoria($enderecoBinario, $enderecoHexadecimal);
 
-            $isUltimoEndereco = $ultimoEnderecoArquivo == $enderecoHexadecimal; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
-            if ($this->isPassoAPasso || $isUltimoEndereco) {
+            $isUltimoEnderecoDoArray = $lastkeyOfArray == $key; //se não é passo a passo, mostro a tela somente no ultimo endereco do arquivo
+            if ($this->isPassoAPasso || $isUltimoEnderecoDoArray) {
                 $this->mostrarTabela($enderecoBinario, $enderecoHexadecimal);
             }
         }
@@ -91,7 +92,7 @@ class MemoriaCache {
         if (!isset($memoriaCache[$idx])) { //ve se existe a linha
             return false;
         }
-        
+
         if ($memoriaCache[$idx]['v'] == 0) { //verifica bit de validade
             return false;
         }
@@ -113,7 +114,7 @@ class MemoriaCache {
             'tag' => $tag
         ];
 
-	$this->removeUltimoHexadecimalEndereco($enderecoHexadecimal);
+        $this->removeUltimoHexadecimalEndereco($enderecoHexadecimal);
 
         for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
             $memoriaCache[$idx]['data' . $i] = 'mem(' . $enderecoHexadecimal . ')';
@@ -172,8 +173,8 @@ class MemoriaCache {
     }
 
     private function removeUltimoHexadecimalEndereco(&$endereco) {
-       $endereco = substr_replace($endereco, "X", -1);
-   	}
+        $endereco = substr_replace($endereco, "X", -1);
+    }
 
     public function mostrarTabela($enderecoQueEEstaSendoLendo = '', $enderecoHexadecimal = '') {
         if ($this->isPassoAPasso && !empty($enderecoQueEEstaSendoLendo)) {
@@ -194,7 +195,7 @@ class MemoriaCache {
             for ($i = 1; $i <= self::getQuantidadeBlocosPalavra(); $i ++) {
                 printf($maskBlocos, $valores['data' . $i]);
             }
-            
+
             echo "\n";
         }
 
@@ -203,7 +204,6 @@ class MemoriaCache {
             echo "\n Pressione enter para continuar... \n";
             fgetc(STDIN);
         }
-
-     }
+    }
 
 }
